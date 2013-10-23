@@ -1,0 +1,116 @@
+<project name="ExeStdoutToGelf" default="appjar" basedir="." >
+    <!-- set global properties for this build -->
+    <property name="app.name" value="ExeStdoutToGelf"/>
+    <property name="app.path" value="/${app.name}"/>
+    <property name="app.version" value="0.1"/>
+    <property name="build.home" value="${basedir}/build"/>
+    <property name="docs.build" value="${build.home}/doc"/>
+    <property name="src.home" value="${basedir}/src"/>
+    <property name="src.junit" value="${basedir}/junit"/>
+    <property name="web.src" value="${basedir}/web"/>
+    <property name="web.build" value="${build.home}/webapp"/>
+    <property name="compile.deprecation" value="yes"/>
+    <property name="testdir" value="${build.home}/tests"/>
+	<property name="lib.home" value="lib" />
+
+    <property file="local.properties" />
+
+    <!--  ==================== Compilation Control Options ==================== -->
+    <property name="compile.debug" value="true"/>
+    <property name="compile.deprecation" value="false"/>
+    <property name="compile.optimize" value="true"/>
+    <property name="encoding" value="iso-8859-1"/>
+    <property name="javac.source" value="1.6"/>
+    <property name="javac.target" value="1.6"/>
+
+    <!-- ===================== External jar Classpath =========================== -->
+    <path id="external.classpath">
+        <fileset dir="lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- ==================== Run Classpath =========================== -->
+    <path id="project.classpath">
+        <path refid="external.classpath"/>
+        <fileset dir="${build.home}/">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="clean" description="clean up">
+        <delete dir="${build.home}"/>
+    </target>	
+
+	<target name="merge" description="merge in libs" depends="clean">
+		<unzip dest="${build.home}/classes">
+			<patternset>
+				<include name="**/*.class"/>
+			</patternset>
+			<fileset dir="${basedir}">
+				<include name="lib/*.jar" />
+			</fileset>
+		</unzip>
+    </target>
+	
+    <target name="compile" depends="merge">
+        <mkdir dir="${build.home}/classes"/>
+        <javac srcdir="${src.home}" destdir="${build.home}/classes"
+            debug="${compile.debug}" deprecation="${compile.deprecation}" includeantruntime="false"
+            optimize="${compile.optimize}" encoding="${encoding}" source="${javac.source}" target="${javac.target}" >
+            <classpath refid="external.classpath"/>
+        </javac>
+    </target>
+	
+    <target name="appjar" depends="compile">
+		   <pathconvert property="libs.project" pathsep=" ">  
+			  <mapper>  
+				<chainedmapper>  
+				  <!-- remove absolute path -->  
+				  <flattenmapper />  
+		  
+				  <!-- add lib/ prefix -->  
+				  <globmapper from="*" to="lib/*" />  
+				</chainedmapper>  
+			  </mapper>  
+			  <path>  
+				<!-- lib.home contains all jar files,  in several subdirectories -->  
+				<fileset dir="${lib.home}">  
+				  <include name="**/*.jar" />  
+				</fileset>  
+			  </path>  
+		  
+			</pathconvert>  
+
+	<jar destfile="${build.home}/ExeStdoutToGelf.jar">
+             <manifest>
+                <attribute name="Main-Class" value="com.github.annahosanna.ExeStdoutToGelf"/> 
+				<attribute name="Class-Path" value="${libs.project}"/>
+            </manifest>
+            <fileset dir="${build.home}/classes">
+                <include name="**/*.class" />
+            </fileset>
+            <fileset dir="${src.home}">
+                <include name="**/*.class" />
+            </fileset>
+			<!--
+            <fileset dir="${src.home}">
+                <include name="**/*.properties" />
+            </fileset>
+            <fileset 
+            <fileset dir="${lib.home}">
+                <include name="**/*.jar" />
+            </fileset>
+			-->
+            <fileset dir="${basedir}">
+                <include name="lib/*.jar" />
+            </fileset>
+
+            <fileset dir="${src.home}">
+                <include name="META-INF/**/*" />
+            </fileset>
+			
+        </jar>
+    </target>
+
+</project>
